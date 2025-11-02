@@ -1,0 +1,73 @@
+services:
+  app:
+    build: .
+    container_name: niddify-nestjs-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file: .env
+    ports:
+      - '${PORT}:${PORT}'
+    environment:
+      - GENERATE_SOURCEMAP=false
+      - NODE_OPTIONS=--max-old-space-size=16384
+    volumes:
+      - .:/usr/src/app
+    command: sh ./start.sh
+    healthcheck:
+      test: [ "CMD", "curl", "-f", 'http://0.0.0.0:${PORT}/api/v1/health' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - niddify-nestjs
+
+  mysql:
+    image: mysql:8.0
+    container_name: niddify-mysql
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - '${FORWARD_DB_PORT:-3309}:${DB_PORT}'
+    volumes:
+      - niddify-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - niddify-nestjs
+
+  redis:
+    image: redis:7-alpine
+    container_name: niddify-redis
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '${REDIS_EXPOSED_PORT}:6379'
+    volumes:
+      - niddify-redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - niddify-nestjs
+
+networks:
+  niddify-nestjs:
+    driver: bridge
+
+volumes:
+  niddify-mysql-data:
+    driver: local
+  niddify-redis-data:
+    driver: local
