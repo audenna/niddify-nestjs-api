@@ -149,7 +149,6 @@ export class BaseRepository<
       attributes,
     } = params;
 
-    // Step 1: Build cursor condition
     const cursorCondition = buildCursorWhereClause(
       cursorField,
       orderDirection,
@@ -159,35 +158,42 @@ export class BaseRepository<
 
     const combinedWhere = { ...where, ...cursorCondition };
 
-    // Step 2: Fetch only IDs (to paginate cleanly)
     const baseRows = await this.model.findAll({
       where: combinedWhere,
-      attributes: ['id'],
+      attributes: ['id', cursorField],
       order: [
         [cursorField, orderDirection],
         ['id', orderDirection],
       ],
       limit: limit + 1,
-    });
+      subQuery: false,
+      distinct: true,
+    } as any);
 
-    const ids = baseRows.map((r) => r.id);
-    if (ids.length === 0) {
-      return formatResponse([], limit, cursorField);
+    if (baseRows.length === 0) {
+      return formatResponse([], limit, cursorField, cursor);
     }
 
-    // Step 3: Fetch full records with includes, filtering by IDs
+    const hasNextPage = baseRows.length > limit;
+    const idsForPage = hasNextPage
+      ? baseRows.slice(0, limit).map((r) => r.id)
+      : baseRows.map((r) => r.id);
+
     const results = await this.model.findAll({
-      // @ts-ignore
-      where: { id: { [Op.in]: ids } },
+      where: { id: { [Op.in]: idsForPage } },
       include,
       attributes,
       order: [
         [cursorField, orderDirection],
         ['id', orderDirection],
       ],
-    });
+    } as any);
 
-    return formatResponse(results, limit, cursorField);
+    if (hasNextPage) {
+      results.push(baseRows[limit]);
+    }
+
+    return formatResponse(results, limit, cursorField, cursor);
   }
 
   async getReferences(

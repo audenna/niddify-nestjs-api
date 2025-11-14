@@ -56,18 +56,14 @@ export function formatResponse<T>(
     records.pop();
     const lastItem = records[records.length - 1];
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const lastCursorValue = lastItem[cursorKey];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const lastCursorId = lastItem['id'];
 
     nextCursor = encodeCursor({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       value:
         lastCursorValue instanceof Date
           ? lastCursorValue.toISOString()
           : lastCursorValue,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       id: lastCursorId,
     });
   } else {
@@ -77,22 +73,17 @@ export function formatResponse<T>(
 
   if (records.length && inputCursor) {
     const firstItem = records[0];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const firstCursorValue = firstItem[cursorKey];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const firstCursorId = firstItem['id'];
 
     previousCursor = encodeCursor({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       value:
         firstCursorValue instanceof Date
           ? firstCursorValue.toISOString()
           : firstCursorValue,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       id: firstCursorId,
     });
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     previousCursor = null;
   }
 
