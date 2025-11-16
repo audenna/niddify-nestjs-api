@@ -5,7 +5,6 @@ import { AppLogger } from '../../core/logger/logger.service';
 import { CategoryRepository } from './repositories/category.repository';
 import { CreateModelDto } from '../../common/models/dto/create-model.dto';
 import { FileUploadService } from '../../core/file-upload/file-upload.service';
-import { Category } from './models/category.model';
 import { UpdateNamedModelDto } from '../../common/models/dto/update-named-model.dto';
 
 @Injectable()
