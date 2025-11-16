@@ -9,7 +9,8 @@ import { GuardInterface } from './interfaces/guard.interface';
 import { UserTypes } from '../enums/user.types';
 
 export const USER_TYPE_KEY = 'user_types';
-export const UserTypeAllowed = (...types: UserTypes[]) =>
+
+export const UserTypesAllowed = (...types: UserTypes[]) =>
   SetMetadata(USER_TYPE_KEY, types);
 
 @Injectable()

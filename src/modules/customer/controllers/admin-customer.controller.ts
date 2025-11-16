@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import {
-  UserTypeAllowed,
+  UserTypesAllowed,
   UserTypesGuard,
 } from '../../../common/guards/user-types.guard';
 import { UserService } from '../services';
@@ -10,7 +10,7 @@ import { UserTypes } from '../../../common/enums/user.types';
 import { AuthUserService } from '../../auth-user/auth.user.service';
 
 @UseGuards(JwtAuthGuard, UserTypesGuard)
-@UserTypeAllowed(UserTypes.NIDDIFY_ADMIN)
+@UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
 @Controller('customers')
 export class AdminCustomerController {
   constructor(

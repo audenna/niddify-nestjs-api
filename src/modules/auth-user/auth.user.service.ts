@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -17,6 +18,7 @@ import {
 import { CreateUserDto } from '../auth/dto/user/create-user.dto';
 import { UserTypes } from '../../common/enums/user.types';
 import { AppConfigService } from '../../config/app/app.config.service';
+import { successResponse } from '../../common/dto/api-response/api.response.handler';
 
 @Injectable()
 export class AuthUserService {
@@ -30,6 +32,16 @@ export class AuthUserService {
     this.logger = logger.withContext(AuthUserService.name);
   }
 
+  async getLoggedInProfile(authenticatedUser: AuthUser): Promise<any> {
+    const user = await this.authUserRepo.findAuthUserWithProfileByType(
+      +authenticatedUser.id,
+    );
+
+    if (!user) throw new ForbiddenException('Account does not exist');
+
+    return successResponse(ResponseCode.OK, user, 'Profile information');
+  }
+
   async createUser(
     dto: CreateUserDto,
     userType: UserTypes,
@@ -37,8 +49,8 @@ export class AuthUserService {
     presenceStatus?: UserPresenceStatusEnum,
     regType?: RegTypeEnum,
   ): Promise<AuthUser> {
-    this.logger.log('Creating a new user account...');
-    this.logger.log({ dto, userType });
+    this.logger.log('Creating a new user account...', { dto, userType });
+
     const payload = {
       userType,
       phoneNumber: dto.phoneNumber,

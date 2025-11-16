@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
-  UserTypeAllowed,
+  UserTypesAllowed,
   UserTypesGuard,
 } from '../../../common/guards/user-types.guard';
 import { UserTypes } from '../../../common/enums/user.types';
@@ -24,13 +24,13 @@ export class UserController {
   constructor(private readonly service: UserService) {}
 
   @Get('profile')
-  @UserTypeAllowed(UserTypes.USER)
+  @UserTypesAllowed(UserTypes.USER)
   getProfile(@CurrentUser() user: AuthUser): any {
     // return this.service.getLoggedInProfile(user);
   }
 
   @Patch('profile')
-  @UserTypeAllowed(UserTypes.USER)
+  @UserTypesAllowed(UserTypes.USER)
   async updateProfile(
     @CurrentUser() user: AuthUser,
     @Body() payload: UpdateProfileDto,
@@ -39,7 +39,7 @@ export class UserController {
   }
 
   @Delete('profile')
-  @UserTypeAllowed(UserTypes.USER)
+  @UserTypesAllowed(UserTypes.USER)
   async deactivateOrDeleteAccount(
     @CurrentUser() user: AuthUser,
     @Body() dto: CreateAccountDeactivationDto,

@@ -1,4 +1,4 @@
-export interface INamedModelAttribute {
+export interface INamedModelAttribute extends IUUIDModelAttribute {
   name: string;
   description?: string | null;
 }

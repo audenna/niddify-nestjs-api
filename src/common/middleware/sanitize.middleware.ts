@@ -35,6 +35,7 @@ export class SanitizeMiddleware implements NestMiddleware {
 
     return input;
   }
+
   private sanitizeInPlace(obj: unknown): void {
     if (typeof obj === 'object' && obj !== null) {
       Object.keys(obj).forEach((key) => {
@@ -51,8 +52,10 @@ export class SanitizeMiddleware implements NestMiddleware {
               return this.util.sanitizeString(item);
             } else if (typeof item === 'object' && item !== null) {
               this.sanitizeInPlace(item);
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-return
               return item;
             }
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return item;
           });
         } else if (typeof value === 'object' && value !== null) {

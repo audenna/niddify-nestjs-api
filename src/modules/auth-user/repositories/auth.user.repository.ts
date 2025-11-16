@@ -25,7 +25,6 @@ export class AuthUserRepository extends BaseRepository<AuthUser> {
         includes.push({
           model: User,
           as: 'user',
-          // include: [{ model: State, include: [{ model: Country }] }],
         });
         break;
 
@@ -33,7 +32,6 @@ export class AuthUserRepository extends BaseRepository<AuthUser> {
         includes.push({
           model: Admin,
           as: 'admin',
-          // include: [{ model: State, include: [{ model: Country }] }],
         });
         break;
     }

@@ -7,7 +7,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateNamedModelDto implements INamedModelAttribute {
+export class CreateModelDto implements INamedModelAttribute {
   @Length(3, 50)
   @IsString({ message: 'Name must be a valid string' })
   @IsNotEmpty({ message: 'Enter a name to proceed' })

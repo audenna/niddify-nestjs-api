@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { NamedModel } from '../models';
 import { BaseRepository } from '../../repositories/base.repository';
-import { CreateNamedModelDto } from '../dto/create-named-model.dto';
+import { CreateModelDto } from '../dto/create-model.dto';
 import { Util } from '../../utils';
 import { AppLogger } from '../../../core/logger/logger.service';
 import { CreationAttributes, Op, WhereOptions } from 'sequelize';
@@ -37,15 +37,15 @@ export abstract class NamedModelService {
       limit: filters.size,
       cursor: filters.cursor,
       cursorField: 'updatedAt',
-      where,
       orderDirection: 'DESC',
+      where,
     });
 
     return successResponse(ResponseCode.OK, result, 'Record results');
   }
 
-  async create(dto: CreateNamedModelDto): Promise<any> {
-    this.logger.log('Creating a new record...');
+  async create(dto: CreateModelDto): Promise<any> {
+    this.logger.log('Creating a new record...', dto);
 
     dto.name = this.utils.capitalizeFirstLetters(
       this.utils.sanitizeString(dto.name),
@@ -54,7 +54,6 @@ export abstract class NamedModelService {
     if (await this.repository.findOneByCondition({ name: dto.name })) {
       throw new BadRequestException('A record with this name already exists');
     }
-
     try {
       const record = await this.repository.create(
         dto as unknown as CreationAttributes<NamedModel>,
@@ -72,18 +71,12 @@ export abstract class NamedModelService {
     }
   }
 
-  async deleteById(id: number, condition: WhereOptions = {}): Promise<any> {
-    if (isNaN(id)) {
-      throw new BadRequestException('Invalid record selected');
-    }
-
-    const record = condition
-      ? await this.repository.findOneByCondition(condition)
-      : await this.repository.findOneById(id);
-
+  async deleteById(uuid: string, condition: WhereOptions = {}): Promise<any> {
+    condition = { ...condition, uuid };
+    const record = await this.repository.findOneByCondition(condition);
     if (!record) throw new NotFoundException('Record not found');
     try {
-      await this.repository.delete(id);
+      await record.destroy({ force: true });
       return successResponse(
         ResponseCode.OK,
         null,
@@ -96,10 +89,9 @@ export abstract class NamedModelService {
     }
   }
 
-  async updateById(id: number, dto: UpdateNamedModelDto): Promise<any> {
-    if (!(await this.repository.findOneById(id))) {
-      throw new NotFoundException('Record not found');
-    }
+  async updateById(uuid: string, dto: UpdateNamedModelDto): Promise<any> {
+    const model = await this.repository.findOneByCondition({ uuid });
+    if (!model) throw new NotFoundException('Record not found');
 
     if (dto.name) dto.name = this.utils.sanitizeString(dto.name);
 
@@ -110,9 +102,8 @@ export abstract class NamedModelService {
     if (await this.repository.findOneByCondition({ name: dto.name })) {
       throw new BadRequestException('A record with this name already exists');
     }
-
     try {
-      const record = await this.repository.update(id, dto);
+      const record = await this.repository.update(+model.id, dto);
       return successResponse(
         ResponseCode.OK,
         record,

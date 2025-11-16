@@ -4,6 +4,8 @@ import { AuthUserModule } from './auth-user/auth.user.module';
 import { RefreshTokenModule } from './refresh-token/refresh.token.module';
 import { CustomerModule } from './customer/customer.module';
 import { AuthModule } from './auth/auth.module';
+import { CategoryModule } from './category/category.module';
+import { HomeModule } from './home/home.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { AuthModule } from './auth/auth.module';
     RefreshTokenModule,
     CustomerModule,
     AuthModule,
+    CategoryModule,
+    HomeModule,
   ],
   exports: [
     AdminModule,
@@ -19,6 +23,8 @@ import { AuthModule } from './auth/auth.module';
     RefreshTokenModule,
     CustomerModule,
     AuthModule,
+    CategoryModule,
+    HomeModule,
   ],
 })
 export class FeatureModule {}
