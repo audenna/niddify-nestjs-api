@@ -10,9 +10,9 @@ import appConfiguration from './file-upload.configuration';
     ConfigModule.forRoot({
       load: [appConfiguration],
       validationSchema: Joi.object({
-        CLOUDINARY_CLOUD_NAME: Joi.string().optional().default(null),
-        CLOUDINARY_API_KEY: Joi.string().optional().default(null),
-        CLOUDINARY_API_SECRET: Joi.string().optional().default(null),
+        CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+        CLOUDINARY_API_KEY: Joi.string().required(),
+        CLOUDINARY_API_SECRET: Joi.string().required(),
       }),
     }),
   ],

@@ -21,17 +21,16 @@ import { UpdateNamedModelDto } from '../../../common/models/dto/update-named-mod
 import { PaginationFiltersDto } from '../../../common/dto/filters/pagination-filters.dto';
 
 @UseGuards(JwtAuthGuard, UserTypesGuard)
+@UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
 @Controller('home-types')
 export class HomeTypeController {
   constructor(private readonly service: HomeTypeService) {}
 
-  @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
   @Post()
   async createType(@Body() dto: CreateModelDto): Promise<any> {
     return await this.service.create(dto);
   }
 
-  @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
   @Patch('/:uuid')
   async updateType(
     @Param('uuid') uuid: string,
@@ -40,13 +39,11 @@ export class HomeTypeController {
     return await this.service.updateById(uuid, dto);
   }
 
-  @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
   @Delete('/:uuid')
   async deleteType(@Param('uuid') uuid: string): Promise<any> {
     return await this.service.deleteById(uuid);
   }
 
-  @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
   @Get()
   async fetchAll(@Query() filters: PaginationFiltersDto): Promise<any> {
     return await this.service.fetchAll(filters);

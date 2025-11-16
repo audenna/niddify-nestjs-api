@@ -12,8 +12,14 @@ export function imageFileFilter(
       );
     }
 
-    const ext = file.mimetype.split('/')[1];
-    if (!allowedTypes.includes(ext)) {
+    // Extract the subtype: png, jpeg, jpg, gif, svg+xml etc.
+    let subtype = file.mimetype.split('/')[1]?.toLowerCase();
+
+    // Normalize jpeg → jpg (optional)
+    if (subtype === 'jpeg') subtype = 'jpg';
+    if (subtype.includes('+')) subtype = subtype.split('+')[0]; // handle "svg+xml"
+
+    if (!allowedTypes.includes(subtype)) {
       return callback(
         new BadRequestException(
           `Invalid image type. Allowed types: ${allowedTypes.join(', ')}`,

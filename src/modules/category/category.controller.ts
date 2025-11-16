@@ -5,11 +5,12 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import {
@@ -20,6 +21,8 @@ import { UserTypes } from '../../common/enums/user.types';
 import { CreateModelDto } from '../../common/models/dto/create-model.dto';
 import { UpdateNamedModelDto } from '../../common/models/dto/update-named-model.dto';
 import { PaginationFiltersDto } from '../../common/dto/filters/pagination-filters.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { imageFileFilter, maxFileSize } from '../../common/validators';
 
 @UseGuards(JwtAuthGuard, UserTypesGuard)
 @Controller('categories')
@@ -27,18 +30,34 @@ export class CategoryController {
   constructor(private readonly service: CategoryService) {}
 
   @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: imageFileFilter(['png', 'jpg', 'jpeg']),
+      limits: maxFileSize(5 * 1024 * 1024), // 5MB
+    }),
+  )
   @Post()
-  async addCategory(@Body() dto: CreateModelDto): Promise<any> {
-    return await this.service.create(dto);
+  async addCategory(
+    @Body() dto: CreateModelDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<any> {
+    return await this.service.addCategory(dto, file);
   }
 
   @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      fileFilter: imageFileFilter(['png', 'jpg', 'jpeg']),
+      limits: maxFileSize(5 * 1024 * 1024), // 5MB
+    }),
+  )
   @Patch('/:uuid')
   async updateCategory(
     @Param('uuid') uuid: string,
     @Body() dto: UpdateNamedModelDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<any> {
-    return await this.service.updateById(uuid, dto);
+    return await this.service.updateCategory(uuid, dto, file);
   }
 
   @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)

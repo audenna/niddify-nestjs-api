@@ -12,7 +12,7 @@ import { FileUploadConfigService } from '../../../config/file-upload/file-upload
 @Injectable()
 export class CloudinaryService implements ImageUploadProvider {
   name = 'cloudinary';
-  isDefault = false;
+  isDefault = true;
 
   constructor(
     private readonly logger: AppLogger,
