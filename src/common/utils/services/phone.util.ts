@@ -11,15 +11,13 @@ export class PhoneUtil {
   }
 
   public escapeStringForRegex = (string: string | null) => {
-    if (!string)
+    if (!string) {
       throw new BadRequestException('Unable to determine phone number status');
+    }
 
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   };
 
-  /**
-   * Validate phone number with optional country config.
-   */
   public isValidPhoneNumber(phoneNumber: string, country?: ICountry): boolean {
     const clean = this.sanitizePhoneNumber(phoneNumber);
 
@@ -65,9 +63,6 @@ export class PhoneUtil {
     return dialingCode + phone;
   }
 
-  /**
-   * Strip dialing code & return local phone format.
-   */
   public getPhoneNumberWithoutDialingCode(
     phone: string,
     country?: ICountry,

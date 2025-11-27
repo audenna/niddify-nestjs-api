@@ -52,7 +52,7 @@ export class FileUploadService {
 
   async handleMultipleUploads(
     files: Express.Multer.File[],
-    providerName: string = 'aws-s3',
+    providerName: string = 'cloudinary',
   ): Promise<FileUploadResult[] | []> {
     const results: FileUploadResult[] = [];
     if (!files.length) return [];

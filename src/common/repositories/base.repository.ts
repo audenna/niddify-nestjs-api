@@ -138,6 +138,7 @@ export class BaseRepository<
 
   async findWithCursorPagination(
     params: CursorPaginationParamsInterface<T>,
+    addIncludeToBaseQuery: boolean = false,
   ): Promise<CursorPaginationResultInterface<T>> {
     const {
       limit,
@@ -166,6 +167,7 @@ export class BaseRepository<
         ['id', orderDirection],
       ],
       limit: limit + 1,
+      include: addIncludeToBaseQuery ? include : [],
       subQuery: false,
       distinct: true,
     } as any);
@@ -176,8 +178,8 @@ export class BaseRepository<
 
     const hasNextPage = baseRows.length > limit;
     const idsForPage = hasNextPage
-      ? baseRows.slice(0, limit).map((r) => r.id)
-      : baseRows.map((r) => r.id);
+      ? baseRows.slice(0, limit).map((r) => Number(r.id))
+      : baseRows.map((r) => Number(r.id));
 
     const results = await this.model.findAll({
       where: { id: { [Op.in]: idsForPage } },

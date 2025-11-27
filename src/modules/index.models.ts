@@ -1,4 +1,4 @@
-export { HomeType } from './home/models';
+export { HomeType, Home, HomeCoverPhoto, HomeContact } from './home/models';
 
 export { Category } from './category/models/category.model';
 export { User } from './customer/models';
