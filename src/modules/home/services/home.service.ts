@@ -32,7 +32,9 @@ import { EmailQueueService } from '../../../queues/email/email.queue.service';
 import { EmailOptionsDto } from '../../../core/email/dto/email.options.dto';
 import { UpdateHomeDto } from '../dto/update-home.dto';
 import { isEmpty } from 'lodash';
-import { HomeAdmin } from '../models';
+import { Home, HomeAdmin } from '../models';
+import { PaginationFiltersDto } from '../../../common/dto/filters/pagination-filters.dto';
+import { InferAttributes, Op, WhereOptions } from 'sequelize';
 
 @Injectable()
 export class HomeService {
@@ -340,5 +342,46 @@ export class HomeService {
         `Error deleting home ${home.name}`,
       );
     }
+  }
+
+  async findHome(homeId: number): Promise<any> {
+    const home = await this.repo.findOneById(homeId, {
+      include: this.repo.getRelationships(),
+    });
+
+    if (!home) throw new NotFoundException('Home not found');
+
+    return successResponse(ResponseCode.OK, home, 'Home details found');
+  }
+
+  async getHomes(filter: PaginationFiltersDto): Promise<any> {
+    const { size, searchTerm, cursor } = filter;
+
+    const where: WhereOptions<InferAttributes<Home>> = {};
+
+    if (searchTerm) {
+      const like = `%${searchTerm}%`;
+
+      where[Op.or] = [
+        { name: { [Op.like]: like } },
+        { address: { [Op.like]: like } },
+        { city: { [Op.like]: like } },
+        { state: { [Op.like]: like } },
+        { country: { [Op.like]: like } },
+        { landmark: { [Op.like]: like } },
+        { websiteUrl: { [Op.like]: like } },
+      ];
+    }
+
+    const records = await this.repo.findWithCursorPagination({
+      limit: size,
+      cursor,
+      cursorField: 'updatedAt',
+      orderDirection: 'DESC',
+      where,
+      include: this.repo.getRelationships(),
+    });
+
+    return successResponse(ResponseCode.OK, records, 'Homes');
   }
 }

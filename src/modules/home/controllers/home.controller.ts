@@ -2,10 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
-  Post,
+  Post, Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -23,6 +24,7 @@ import { CreateHomeDto } from '../dto/create-home.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { imageFileFilter, maxFileSize } from '../../../common/validators';
 import { UpdateHomeDto } from '../dto/update-home.dto';
+import { PaginationFiltersDto } from '../../../common/dto/filters/pagination-filters.dto';
 
 @UseGuards(JwtAuthGuard, UserTypesGuard)
 @Controller('homes')
@@ -73,5 +75,16 @@ export class HomeController {
     @Param('homeId', ParseIntPipe) homeId: number,
   ): Promise<any> {
     return this.service.deleteHome(homeId);
+  }
+
+  @Get('/:homeId')
+  @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
+  async findHome(@Param('homeId', ParseIntPipe) homeId: number): Promise<any> {
+    return this.service.findHome(homeId);
+  }
+
+  @Get()
+  async getHomes(@Query() filter: PaginationFiltersDto): Promise<any> {
+    return this.service.getHomes(filter);
   }
 }
