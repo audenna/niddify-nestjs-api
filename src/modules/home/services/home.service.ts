@@ -28,6 +28,11 @@ import { AuthUserRepository } from '../../auth-user/repositories/auth.user.repos
 import { UserTypes } from '../../../common/enums/user.types';
 import { HomeContactType } from '../enums/home-contact-type.enum';
 import { IHomeContact } from '../interfaces/home.interface';
+import { EmailQueueService } from '../../../queues/email/email.queue.service';
+import { EmailOptionsDto } from '../../../core/email/dto/email.options.dto';
+import { UpdateHomeDto } from '../dto/update-home.dto';
+import { isEmpty } from 'lodash';
+import { HomeAdmin } from '../models';
 
 @Injectable()
 export class HomeService {
@@ -44,6 +49,7 @@ export class HomeService {
     private readonly sequelize: Sequelize,
     private readonly hashUtil: HashUtil,
     private readonly phoneUtil: PhoneUtil,
+    private readonly emailQueueService: EmailQueueService,
   ) {
     this.logger = logger.withContext('HomeService');
   }
@@ -150,6 +156,7 @@ export class HomeService {
     const type = await this.typeRepository.findOneByCondition({
       uuid: homeTypeUuid,
     });
+
     if (!type) throw new NotFoundException('Invalid home type');
 
     // Upload files to the cloud in parallel
@@ -229,6 +236,20 @@ export class HomeService {
       });
 
       // Send an email with the login credentials to the admin contact email
+      const emailOptions: EmailOptionsDto = {
+        to: adminContact.emailAddress,
+        subject: 'Your login credentials',
+        templateName: 'user-login-credentials',
+        context: {
+          homeName: payload.name,
+          email: adminContact.emailAddress,
+          password,
+          recipientName: `${adminContact.firstName} ${adminContact.lastName}`,
+          loginUrl: '',
+        },
+      };
+
+      void this.emailQueueService.dispatchEmailJob(emailOptions);
 
       return successResponse(
         ResponseCode.OK,
@@ -239,6 +260,85 @@ export class HomeService {
       await transaction.rollback();
       this.logger.error(`Unable to add a new home ${payload.name}`, e);
       throw new InternalServerErrorException('Error adding a new home');
+    }
+  }
+
+  async updateHome(homeId: number, dto: UpdateHomeDto): Promise<any> {
+    if (!Object.values(dto).some((value) => value !== undefined)) {
+      throw new BadRequestException('At least one property is required');
+    }
+
+    let home = await this.repo.findOneById(homeId);
+    if (!home) throw new NotFoundException('Home not found');
+
+    if (dto.name && dto.address) {
+      const homeFound = await this.repo.findOneByCondition({
+        name: dto.name,
+        address: dto.address,
+      });
+      if (homeFound && homeFound.id !== home.id) {
+        throw new BadRequestException(
+          'A home with this address already exists',
+        );
+      }
+    }
+
+    if (dto.name) dto.name = this.util.capitalizeFirstLetters(dto.name);
+    try {
+      home = await this.repo.update(homeId, dto);
+
+      return successResponse(
+        ResponseCode.OK,
+        home,
+        'Successfully updated home',
+      );
+    } catch (e) {
+      this.logger.error(`Unable to update home ${dto.name ?? home?.name}`, e);
+      throw new InternalServerErrorException('Error updating home');
+    }
+  }
+
+  async deleteHome(homeId: number): Promise<any> {
+    const home = await this.repo.findOneById(homeId);
+    if (!home) throw new NotFoundException('Home not found');
+    const t = await this.sequelize.transaction();
+    try {
+      // Fetch home admins for this home
+      const homeAdmins = await HomeAdmin.findAll({
+        where: { homeId },
+        attributes: ['authUserId'],
+        transaction: t,
+      });
+
+      const authUserIds = homeAdmins.map((a) => a.authUserId).filter(Boolean);
+
+      // Delete home admins
+      await HomeAdmin.destroy({ where: { homeId }, transaction: t });
+
+      // 3. Delete auth users linked to those home admins
+      if (authUserIds.length > 0) {
+        await AuthUser.destroy({
+          where: { id: authUserIds },
+          transaction: t,
+          force: true,
+        });
+      }
+
+      await home.destroy({ force: true, transaction: t });
+
+      await t.commit();
+
+      return successResponse(
+        ResponseCode.OK,
+        null,
+        `Successfully deleted ${home.name}`,
+      );
+    } catch (e) {
+      await t.rollback();
+      this.logger.error(`Unable to delete home ${home.name}`, e);
+      throw new InternalServerErrorException(
+        `Error deleting home ${home.name}`,
+      );
     }
   }
 }

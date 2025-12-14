@@ -1,6 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
+  Param,
+  ParseIntPipe,
+  Patch,
   Post,
   UploadedFiles,
   UseGuards,
@@ -18,6 +22,7 @@ import { AuthUser } from '../../auth-user/models/auth.user.model';
 import { CreateHomeDto } from '../dto/create-home.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { imageFileFilter, maxFileSize } from '../../../common/validators';
+import { UpdateHomeDto } from '../dto/update-home.dto';
 
 @UseGuards(JwtAuthGuard, UserTypesGuard)
 @Controller('homes')
@@ -51,5 +56,22 @@ export class HomeController {
     const covers = (files?.coverPhotos as Express.Multer.File[]) ?? [];
 
     return await this.service.addHome(user, dto, logo, covers);
+  }
+
+  @Patch('/:homeId')
+  @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
+  async updateHome(
+    @Param('homeId', ParseIntPipe) homeId: number,
+    @Body() dto: UpdateHomeDto,
+  ): Promise<any> {
+    return this.service.updateHome(homeId, dto);
+  }
+
+  @Delete('/:homeId')
+  @UserTypesAllowed(UserTypes.NIDDIFY_ADMIN)
+  async deleteHome(
+    @Param('homeId', ParseIntPipe) homeId: number,
+  ): Promise<any> {
+    return this.service.deleteHome(homeId);
   }
 }

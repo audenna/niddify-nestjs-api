@@ -1,4 +1,5 @@
 import {
+  BeforeDestroy,
   BelongsTo,
   Column,
   DataType,
@@ -39,4 +40,14 @@ export class HomeAdmin
   @Index
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
   declare isCreator: boolean;
+
+  @BeforeDestroy
+  static async deleteAuthUser(instance: HomeAdmin) {
+    if (!instance.authUserId) return;
+
+    await AuthUser.destroy({
+      where: { id: instance.authUserId },
+      individualHooks: true,
+    });
+  }
 }
